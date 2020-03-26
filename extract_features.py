@@ -139,7 +139,7 @@ not_zero = []
 preprocess = []
 
 def main():
-	Process('F:\\_Workspace\\Patch\\security_patch\\realData\\CWE_16_Configuration\\CVE-2009-1243-30842f2989aacfaba3ccb39829b3417be9313dbe.txt', '1')
+	Process('./test.txt', '1')
 	# read the positive files (1).
 	for root, ds, fs in os.walk(posPath):
 		for file in fs:
@@ -163,6 +163,12 @@ def Process(filename, goldtruth):
 	deletion, addition = GetDiffHunkFunc(filename)
 	del_line, add_line = GetLineInfo(deletion, addition)
 	del_char, add_char = GetCharInfo(deletion, addition)
+	del_mem, add_mem = GetMemInfo(deletion, addition)
+	del_if, add_if = GetIfInfo(deletion, addition)
+	del_jump, add_jump = GetJumpInfo(deletion, addition)
+	del_loop, add_loop = GetLoopInfo(deletion, addition)
+	GetAriRelLogBit(deletion, addition)
+	GetCallVar(deletion, addition)
 	return
 
 def GetMutualInfo(filename):
@@ -287,7 +293,240 @@ def GetCharInfo(deletion, addition):
 	char_num_add.append(add_char)
 	return del_char, add_char
 
+def GetMemInfo(deletion, addition):
+	# memory information.
+	del_mem = 0
+	add_mem = 0
+	# find all hunks.
+	for i in range(len(deletion)):
+		for item in mem_keyword:
+			if item in deletion[i]:
+				del_mem += deletion[i].count(item)
+			if item in addition[i]:
+				add_mem += addition[i].count(item)
+	# statistic.
+	mem_num_total.append(add_mem + del_mem)
+	mem_num_net.append(add_mem - del_mem)
+	mem_num_del.append(del_mem)
+	mem_num_add.append(add_mem)
+	return del_mem, add_mem
 
+def GetIfInfo(deletion, addition):
+	# if keyword
+	del_if = 0
+	add_if = 0
+	# find all hunks.
+	for i in range(len(deletion)):
+		for item in if_keyword:
+			if item in deletion[i]:
+				del_if += deletion[i].count(item)
+			if item in addition[i]:
+				add_if += addition[i].count(item)
+	# statistic.
+	if_num_total.append(add_if + del_if)
+	if_num_net.append(add_if - del_if)
+	if_num_del.append(del_if)
+	if_num_add.append(add_if)
+	return del_if, add_if
+
+def GetJumpInfo(deletion, addition):
+	# jump keyword
+	del_jump = 0
+	add_jump = 0
+	# find all hunks.
+	for i in range(len(deletion)):
+		for term in jump_keyword:
+			if term in deletion[i]:
+				del_jump += deletion[i].count(term)
+			if term in addition[i]:
+				add_jump += addition[i].count(term)
+	# statistic.
+	jump_num_total.append(add_jump + del_jump)
+	jump_num_net.append(add_jump - del_jump)
+	jump_num_del.append(del_jump)
+	jump_num_add.append(add_jump)
+	return del_jump, add_jump
+
+def GetLoopInfo(deletion, addition):
+	# loop keyword.
+	del_loop = 0
+	add_loop = 0
+	# find all hunks.
+	for i in range(len(deletion)):
+		for item in loop_keyword:
+			if item in deletion[i]:
+				del_loop += deletion[i].count(item)
+			if item in addition[i]:
+				add_loop += addition[i].count(item)
+	# statistic.
+	loop_num_total.append(add_loop + del_loop)
+	loop_num_net.append(add_loop - del_loop)
+	loop_num_del.append(del_loop)
+	loop_num_add.append(add_loop)
+	return del_loop, add_loop
+
+def GetAriRelLogBit(deletion, addition):
+	# arithmetic.
+	del_ari = 0
+	add_ari = 0
+	# relational.
+	del_rel = 0
+	add_rel = 0
+	# logical.
+	del_log = 0
+	add_log = 0
+	# bit.
+	del_bit = 0
+	add_bit = 0
+	# find all hunks.
+	for i in range(len(deletion)):
+		tmp_del = deletion[i][1:].replace("\n-", '')
+		tmp_add = addition[i][1:].replace("\n+", '')
+		for item in ari_op2:
+			del_ari += tmp_del.count(item)
+			add_ari += tmp_add.count(item)
+			tmp_del = tmp_del.replace(item, '')
+			tmp_add = tmp_add.replace(item, '')
+		for item in rel_op2:
+			del_rel += tmp_del.count(item)
+			add_rel += tmp_add.count(item)
+			tmp_del = tmp_del.replace(item, '')
+			tmp_add = tmp_add.replace(item, '')
+		for item in log_op2:
+			del_log += tmp_del.count(item)
+			add_log += tmp_add.count(item)
+			tmp_del = tmp_del.replace(item, '')
+			tmp_add = tmp_add.replace(item, '')
+		for item in bit_op2:
+			del_bit += tmp_del.count(item)
+			add_bit += tmp_add.count(item)
+			tmp_del = tmp_del.replace(item, '')
+			tmp_add = tmp_add.replace(item, '')
+		for item in ari_op1:
+			del_ari += tmp_del.count(item)
+			add_ari += tmp_add.count(item)
+			tmp_del = tmp_del.replace(item, '')
+			tmp_add = tmp_add.replace(item, '')
+		for item in rel_op1:
+			del_rel += tmp_del.count(item)
+			add_rel += tmp_add.count(item)
+			tmp_del = tmp_del.replace(item, '')
+			tmp_add = tmp_add.replace(item, '')
+		for item in log_op1:
+			del_log += tmp_del.count(item)
+			add_log += tmp_add.count(item)
+			tmp_del = tmp_del.replace(item, '')
+			tmp_add = tmp_add.replace(item, '')
+		for item in bit_op1:
+			del_bit += tmp_del.count(item)
+			add_bit += tmp_add.count(item)
+			tmp_del = tmp_del.replace(item, '')
+			tmp_add = tmp_add.replace(item, '')
+	# arithmetic.
+	ari_num_total.append(add_ari + del_ari)
+	ari_num_net.append(add_ari - del_ari)
+	ari_num_del.append(del_ari)
+	ari_num_add.append(add_ari)
+	# relational.
+	rel_num_total.append(add_rel + del_rel)
+	rel_num_net.append(add_rel - del_rel)
+	rel_num_del.append(del_rel)
+	rel_num_add.append(add_rel)
+	# logical.
+	log_num_total.append(add_log + del_log)
+	log_num_net.append(add_log - del_log)
+	log_num_del.append(del_log)
+	log_num_add.append(add_log)
+	# bit.
+	bit_num_total.append(add_bit + del_bit)
+	bit_num_net.append(add_bit - del_bit)
+	bit_num_del.append(del_bit)
+	bit_num_add.append(add_bit)
+	return del_ari, add_ari, del_rel, add_rel, del_log, add_log, del_bit, add_bit
+
+def GetCallVar(deletion, addition):
+	# call and var
+	del_func_list = []
+	del_var_list = []
+	add_func_list = []
+	add_var_list = []
+	# find all hunks.
+	for i in range(len(deletion)):
+		tmp_del = deletion[i]
+		tmp_add = addition[i]
+		# process tmp_del.
+		pre_del = ""
+		while 1:
+			if "\n-" in tmp_del:
+				i = tmp_del.find("\n-")
+				line = tmp_del[1:i].lstrip()
+				tmp_del = tmp_del[i + 1:]
+			else:
+				line = tmp_del[1:].lstrip()
+				tmp_del = ''
+			if line[:1] == '#':
+				pass
+			else:
+				while (len(line) > 0):
+					mark = re.match('[0-9a-zA-Z\_]+', line)
+					if (mark):
+						j = mark.end()
+						del_var_list.append(line[:j])
+						pre_del = line[:j]
+						line = line[j:].lstrip()
+					else:
+						j = re.match('[^\w\s]+', line).end()
+						if line[:j][:1] == '(' and re.match('[0-9a-zA-Z\_]+', pre_del):
+							del_var_list.remove(pre_del)
+							del_func_list.append(pre_del)
+						pre_del = line[:j]
+						line = line[j:].lstrip()
+			if len(tmp_del) == 0:
+				break
+		del_var_list = list(set(del_var_list))
+		del_func_list = list(set(del_func_list))
+		# process tmp_add.
+		pre_add = ""
+		while 1:
+			if "\n+" in tmp_add:
+				i = tmp_add.find("\n+")
+				line = tmp_add[1:i].lstrip()
+				tmp_add = tmp_add[i + 1:]
+			else:
+				line = tmp_add[1:].lstrip()
+				tmp_add = ''
+			if line[:1] == '#':
+				pass
+			else:
+				while (len(line) > 0):
+					mark = re.match('[0-9a-zA-Z\_]+', line)
+					if (mark):
+						j = mark.end()
+						add_var_list.append(line[:j])
+						pre_add = line[:j]
+						line = line[j:].lstrip()
+					else:
+						j = re.match('[^\w\s]+', line).end()
+						if line[:j][:1] == '(' and re.match('[0-9a-zA-Z\_]+', pre_add):
+							add_var_list.remove(pre_add)
+							add_func_list.append(pre_add)
+						pre_add = line[:j]
+						line = line[j:].lstrip()
+			if len(tmp_add) == 0:
+				break
+		add_var_list = list(set(add_var_list))
+		add_func_list = list(set(add_func_list))
+	# call statistic.
+	call_num_total.append(len(list(set(del_func_list).union(set(add_func_list)).difference(set(c_keywords + cpp_keywords)))))
+	call_num_net.append(len(list(set(add_func_list).difference(set(del_func_list + c_keywords + cpp_keywords)))))
+	call_num_del.append(len(list(set(del_func_list).difference(set(c_keywords + cpp_keywords)))))
+	call_num_add.append(len(list(set(add_func_list).difference(set(c_keywords + cpp_keywords)))))
+	# var statistic.
+	var_num_total.append(len(list(set(del_var_list).union(set(add_var_list)).difference(set(c_keywords + cpp_keywords)))))
+	var_num_net.append(len(list(set(add_var_list).difference(set(del_var_list + c_keywords + cpp_keywords)))))
+	var_num_del.append(len(list(set(del_var_list).difference(set(c_keywords + cpp_keywords)))))
+	var_num_add.append(len(list(set(add_var_list).difference(set(c_keywords + cpp_keywords)))))
+	return del_var_list, add_var_list, del_func_list, add_func_list
 
 if __name__ == '__main__':
 	main()
