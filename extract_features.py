@@ -161,8 +161,8 @@ def Process(filename, goldtruth):
 	# get features.
 	GetMutualInfo(filename)
 	deletion, addition = GetDiffHunkFunc(filename)
-	GetLineInfo(deletion, addition)
-
+	del_line, add_line = GetLineInfo(deletion, addition)
+	del_char, add_char = GetCharInfo(deletion, addition)
 	return
 
 def GetMutualInfo(filename):
@@ -269,6 +269,23 @@ def GetLineInfo(deletion, addition):
 	line_num_del.append(del_line)
 	line_num_add.append(add_line)
 	return del_line, add_line
+
+def GetCharInfo(deletion, addition):
+	# char
+	del_char = 0
+	add_char = 0
+	# find all hunks.
+	for i in range(len(deletion)):
+		if (len(deletion[i]) != 0):
+			del_char += len(deletion[i]) - deletion[i].count('\n') - deletion[i].count('\r') - deletion[i].count('\t') - deletion[i].count(' ') - (deletion[i].count("\n-")+1)
+		if (len(addition[i]) != 0):
+			add_char += len(addition[i]) - addition[i].count('\n') - addition[i].count('\r') - addition[i].count('\t') - addition[i].count(' ') - (addition[i].count("\n+")+1)
+	# statistic.
+	char_num_total.append(add_char + del_char)
+	char_num_net.append(add_char - del_char)
+	char_num_del.append(del_char)
+	char_num_add.append(add_char)
+	return del_char, add_char
 
 
 
