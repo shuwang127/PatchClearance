@@ -9,7 +9,8 @@ posPath = rootPath + '/security_patch/'
 negPath = rootPath + '/random_commit/'
 
 def main():
-    ReadData()
+    posFeat, negFeat = ReadData()
+    print((posFeat[0]))
     return
 
 def ReadData():
@@ -20,18 +21,13 @@ def ReadData():
     dset = pd.read_csv('feature.csv')
     # extract data features.
     dfeat = dset.values.tolist()
-
-    print(dfeat[1000])
-    print(len(dfeat[1000]))
+    # separate the data.
     for item in dfeat:
         if 'security_patch' in item[1]:
-            print('1')
-            pass
+            posFeat.append(item[2:])
         else:
-            print('0')
-            pass
-
-    return
+            negFeat.append(item[2:])
+    return posFeat, negFeat
 
 
 if __name__ == '__main__':
