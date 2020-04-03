@@ -1,4 +1,28 @@
+'''
+    Security Patch Group: Data Cleaning Task.
+    Developer: Shu Wang
+    Date: 2020-04-03
+    File Structure:
+    Patch
+        |-- candidates              # found samples need to be judged.
+        |-- judged                  # already judged samples.
+                |-- negatives
+                |-- positives
+        |-- matlab                  # matlab program.
+        |-- random_commit           # unknown patches.
+        |-- security_patch          # positive patches.
+        |-- temp                    # temporary stored variables.
+                |-- distMatrix.npy
+                |-- outIndex.npy
+        |-- extract_features.py     # extract features for random_commit and security_patch.
+        |-- feature.csv             # feature file.
+        |-- main.py                 # main entrance.
+    Usage:
+        python main.py
+'''
+
 import os
+import time
 import shutil
 import numpy as np
 import pandas as pd
@@ -14,14 +38,15 @@ judPath = rootPath + '/judged/'
 judPosPath = judPath + '/positives/'
 judNegPath = judPath + '/negatives/'
 # global variable.
+start_time = time.time() #mark start time
 
 def main():
     posFeat, negFeat = ReadData()
     negFeat = RefineNegative(negFeat)
     distMatrix = GetDistMatrix(posFeat, negFeat)
-    #distMatrix = np.load(tmpPath + '/distMatrix.npy')
+    # distMatrix = np.load(tmpPath + '/distMatrix.npy')
     outIndex = FindTomekLinks(distMatrix)
-    #outIndex = np.load(tmpPath + '/outIndex.npy')
+    # outIndex = np.load(tmpPath + '/outIndex.npy')
     GetCandidates(outIndex, negFeat)
     return
 
@@ -56,7 +81,7 @@ def ReadData():
     # complete check.
     print('[Info] Loaded %d positives and %d negatives (totally %d).' % (len(posFeat), len(negFeat), len(posFeat)+len(negFeat)))
     if 0 == len(posList):
-        print('[Info] Complete loading all positive samples.')
+        print('[Info] Complete loading all positive samples. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     else:
         print('[Error] Not all positive samples loaded!')
         print(posList)
@@ -65,12 +90,12 @@ def ReadData():
 def RefineNegative(negFeat):
     # validate.
     if not os.path.exists(judNegPath):
-        print('[Info] No negative refined!')
+        print('[Info] No negative refined! [TIME: %s sec]' % (round((time.time() - start_time),2)))
         return negFeat
     # get negative list.
     negList = [file for root, ds, fs in os.walk(judNegPath) for file in fs]
     if 0 == len(negList):
-        print('[Info] No negative refined!')
+        print('[Info] No negative refined! [TIME: %s sec]' % (round((time.time() - start_time),2)))
         return negFeat
     # define variables.
     negFeatNew = []
@@ -91,7 +116,7 @@ def RefineNegative(negFeat):
             negFeatNew.append(item)
     # complete check.
     if 0 == len(negList):
-        print('[Info] Complete refining all negative samples.')
+        print('[Info] Complete refining all negative samples. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     else:
         print('[Error] Not all negative samples refined!')
         print(negList)
@@ -115,12 +140,12 @@ def GetDistMatrix(posFeat, negFeat):
     for iPos in range(posNum):
         for iNeg in range(negNum):
             distMatrix[iPos][iNeg] = GetDist(posFeat[iPos][1:], negFeat[iNeg][1:], weights)
-        print('[Proc] Sample %d / %d ...' % (iPos+1, posNum))
+        print('> [Proc] Sample %d / %d ... [TIME: %s sec]' % (iPos+1, posNum, round((time.time() - start_time),2)))
     # save to local.
     if not os.path.exists(tmpPath):
         os.mkdir(tmpPath)
     np.save(tmpPath + '/distMatrix.npy', distMatrix)
-    print('[Info] Get the distance matrix.')
+    print('[Info] Get the distance matrix. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     return distMatrix
 
 def FindTomekLinks(distMatrix):
@@ -145,11 +170,12 @@ def FindTomekLinks(distMatrix):
             minInd = np.argmin(distList)
         outIndex[ind] = minInd
         minDist[ind] = float("inf")
+        print('> [Proc] Tomek Link %d / %d ... [TIME: %s sec]' % (len(set(outIndex))-1, posNum, round((time.time() - start_time), 2)))
     # save file
     if not os.path.exists(tmpPath):
         os.mkdir(tmpPath)
     np.save(tmpPath + '/outIndex.npy', outIndex)
-    print('[Info] Get the tomek link index.')
+    print('[Info] Get the tomek link index. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     return outIndex
 
 def GetCandidates(outIndex, negFeat):
@@ -161,7 +187,7 @@ def GetCandidates(outIndex, negFeat):
     for i in outIndex:
         source = negFeat[i][0]
         shutil.copy(source, candiPath)
-    print('[Info] Get all the candidates.')
+    print('[Info] Get all the candidates. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     return 1
 
 def GetWeights():
