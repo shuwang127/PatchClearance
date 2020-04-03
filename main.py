@@ -1,20 +1,28 @@
 import os
-import re
-import Levenshtein
+import shutil
+import numpy as np
 import pandas as pd
+from sklearn.neighbors import NearestNeighbors
 
 # global path.
 rootPath = './'
 posPath = rootPath + '/security_patch/'
 negPath = rootPath + '/random_commit/'
+tmpPath = rootPath + '/temp/'
 candiPath = rootPath + '/candidates/'
-judPosPath = rootPath + '/judged/positives/'
-judNegPath = rootPath + '/judged/negatives/'
+# judgement path.
+judPath = rootPath + '/judged/'
+judPosPath = judPath + '/positives/'
+judNegPath = judPath + '/negatives/'
 
 def main():
     posFeat, negFeat = ReadData()
     negFeat = RefineNegative(negFeat)
-    GetDistMatrix(posFeat, negFeat)
+    distMatrix = GetDistMatrix(posFeat, negFeat)
+    #distMatrix = np.load(tmpPath + '/distMatrix.npy')
+    outIndex = FindTomekLinks(distMatrix)
+    #outIndex = np.load(tmpPath + '/outIndex.npy')
+    GetCandidates(outIndex, negFeat)
     return
 
 def ReadData():
@@ -85,13 +93,62 @@ def RefineNegative(negFeat):
     return negFeatNew
 
 def GetDistMatrix(posFeat, negFeat):
-    print('[Info] Processing %d positives and %d candidates (totally %d).' % (len(posFeat), len(negFeat), len(posFeat) + len(negFeat)))
-    pos
+    # get distance between two lists.
+    def GetDist(list1, list2):
+        dist = [(list1[i] - list2[i]) ** 2 for i in range(len(list1))]
+        #print(dist)
+        #print(sum(dist))
+        return sum(dist)
+    # get distance matrix
+    posNum = len(posFeat)
+    negNum = len(negFeat)
+    print('[Info] Processing %d positives and %d candidates (totally %d).' % (posNum, negNum, posNum + negNum))
+    distMatrix = np.zeros((posNum, negNum))
+    for iPos in range(posNum):
+        for iNeg in range(negNum):
+            distMatrix[iPos][iNeg] = GetDist(posFeat[iPos][1:], negFeat[iNeg][1:])
+    # save to local.
+    if not os.path.exists(tmpPath):
+        os.mkdir(tmpPath)
+    np.save(tmpPath + '/distMatrix.npy', distMatrix)
+    return distMatrix
 
-    return
+def FindTomekLinks(distMatrix):
+    # dimension.
+    posNum = len(distMatrix)
+    negNum = len(distMatrix[0])
+    # init the minimum index.
+    minDist = [np.min(item) for item in distMatrix]
+    minIndex = [np.argmin(item) for item in distMatrix]
+    # find the index.
+    outIndex = (-1 * np.ones(posNum)).tolist()
+    while (-1 in outIndex):
+        ind = np.argmin(minDist)
+        minInd = minIndex[ind]
+        # if minInd has been used.
+        if minInd in outIndex:
+            distList = distMatrix[ind]
+            banList = list(set(outIndex))
+            banList.remove(-1)
+            for i in banList:
+                distList[i] = float("inf")
+            minInd = np.argmin(distList)
+        outIndex[ind] = minInd
+        minDist[ind] = float("inf")
+    # save file
+    np.save(tmpPath + '/outIndex.npy', outIndex)
+    return outIndex
 
-def Dist(list1, list2):
-    return
+def GetCandidates(outIndex, negFeat):
+    # validate.
+    if os.path.exists(candiPath):
+        shutil.rmtree(candiPath)
+    os.mkdir(candiPath)
+    # copy file
+    for i in outIndex:
+        source = negFeat[i][0]
+        shutil.copy(source, candiPath)
+    return 1
 
 if __name__ == '__main__':
     main()
