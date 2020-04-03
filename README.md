@@ -18,3 +18,5 @@
         |-- extract_features.py     # extract features for random_commit and security_patch.
         |-- feature.csv             # feature file.
         |-- main.py                 # main entrance.
+    Usage:
+        python main.py
