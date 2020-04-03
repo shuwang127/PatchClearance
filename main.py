@@ -13,6 +13,7 @@ candiPath = rootPath + '/candidates/'
 judPath = rootPath + '/judged/'
 judPosPath = judPath + '/positives/'
 judNegPath = judPath + '/negatives/'
+# global variable.
 
 def main():
     posFeat, negFeat = ReadData()
@@ -98,11 +99,14 @@ def RefineNegative(negFeat):
 
 def GetDistMatrix(posFeat, negFeat):
     # get distance between two lists.
-    def GetDist(list1, list2):
-        dist = [(list1[i] - list2[i]) ** 2 for i in range(len(list1))]
-        #print(dist)
-        #print(sum(dist))
+    def GetDist(list1, list2, weights):
+        dist = [((list1[i] - list2[i]) * weights[i]) ** 2 for i in range(len(weights))]
+        # print(dist)
+        # print(sum(dist))
         return sum(dist)
+    # get weights.
+    weights = GetWeights()
+    #GetDist(posFeat[0][1:], negFeat[0][1:], weights)
     # get distance matrix
     posNum = len(posFeat)
     negNum = len(negFeat)
@@ -110,7 +114,8 @@ def GetDistMatrix(posFeat, negFeat):
     distMatrix = np.zeros((posNum, negNum))
     for iPos in range(posNum):
         for iNeg in range(negNum):
-            distMatrix[iPos][iNeg] = GetDist(posFeat[iPos][1:], negFeat[iNeg][1:])
+            distMatrix[iPos][iNeg] = GetDist(posFeat[iPos][1:], negFeat[iNeg][1:], weights)
+        print('[Proc] Sample %d / %d ...' % (iPos+1, posNum))
     # save to local.
     if not os.path.exists(tmpPath):
         os.mkdir(tmpPath)
@@ -158,6 +163,29 @@ def GetCandidates(outIndex, negFeat):
         shutil.copy(source, candiPath)
     print('[Info] Get all the candidates.')
     return 1
+
+def GetWeights():
+    # input the data set.
+    dset = pd.read_csv('feature.csv')
+    dfeat = dset.values.tolist()
+    # convert to array..
+    for item in dfeat:
+        item.pop(1)
+        item.pop(0)
+    nfeat = np.array(dfeat).T
+    # print(nfeat)
+    # max and min of features.
+    dimNum = len(nfeat)
+    dimMax = [max(item) for item in nfeat]
+    dimMin = [min(item) for item in nfeat]
+    dimAbs = [max(abs(dimMax[i]), abs(dimMin[i])) for i in range(dimNum)]
+    # weights = 1 / max(abs(maxV), abs(minV))
+    scales = 10e4
+    weights = [(scales/w) if w else scales for w in dimAbs]
+    # maxDist would be 61 * (2 * scales)**2
+    # print(max(weights)) # 10000
+    # print(min(weights)) # 1/300
+    return weights
 
 if __name__ == '__main__':
     main()
