@@ -115,6 +115,7 @@ def GetDistMatrix(posFeat, negFeat):
     if not os.path.exists(tmpPath):
         os.mkdir(tmpPath)
     np.save(tmpPath + '/distMatrix.npy', distMatrix)
+    print('[Info] Get the distance matrix.')
     return distMatrix
 
 def FindTomekLinks(distMatrix):
@@ -143,6 +144,7 @@ def FindTomekLinks(distMatrix):
     if not os.path.exists(tmpPath):
         os.mkdir(tmpPath)
     np.save(tmpPath + '/outIndex.npy', outIndex)
+    print('[Info] Get the tomek link index.')
     return outIndex
 
 def GetCandidates(outIndex, negFeat):
@@ -154,6 +156,7 @@ def GetCandidates(outIndex, negFeat):
     for i in outIndex:
         source = negFeat[i][0]
         shutil.copy(source, candiPath)
+    print('[Info] Get all the candidates.')
     return 1
 
 if __name__ == '__main__':
