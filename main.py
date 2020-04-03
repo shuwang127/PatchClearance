@@ -63,6 +63,10 @@ def ReadData():
         posListExt = [file for root, ds, fs in os.walk(judPosPath) for file in fs]
         if len(posListExt):
             posList.extend(posListExt)
+    else:
+        if not os.path.exists(judPath):
+            os.mkdir(judPath)
+        os.mkdir(judPosPath)
     # separate the data.
     for item in dfeat:
         fileName = item[1]
@@ -90,6 +94,9 @@ def ReadData():
 def RefineNegative(negFeat):
     # validate.
     if not os.path.exists(judNegPath):
+        if not os.path.exists(judPath):
+            os.mkdir(judPath)
+        os.mkdir(judNegPath)
         print('[Info] No negative refined! [TIME: %s sec]' % (round((time.time() - start_time),2)))
         return negFeat
     # get negative list.
