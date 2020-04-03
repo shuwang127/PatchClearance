@@ -2,7 +2,6 @@ import os
 import shutil
 import numpy as np
 import pandas as pd
-from sklearn.neighbors import NearestNeighbors
 
 # global path.
 rootPath = './'
@@ -34,9 +33,10 @@ def ReadData():
     dfeat = dset.values.tolist()
     # find file names for positive samples.
     posList = [file for root, ds, fs in os.walk(posPath) for file in fs]
-    posListExt = [file for root, ds, fs in os.walk(judPosPath) for file in fs]
-    if len(posListExt):
-        posList.extend(posListExt)
+    if os.path.exists(judPosPath):
+        posListExt = [file for root, ds, fs in os.walk(judPosPath) for file in fs]
+        if len(posListExt):
+            posList.extend(posListExt)
     # separate the data.
     for item in dfeat:
         fileName = item[1]
@@ -62,13 +62,17 @@ def ReadData():
     return posFeat, negFeat
 
 def RefineNegative(negFeat):
-    # define variables.
-    negFeatNew = []
+    # validate.
+    if not os.path.exists(judNegPath):
+        print('[Info] No negative refined!')
+        return negFeat
     # get negative list.
     negList = [file for root, ds, fs in os.walk(judNegPath) for file in fs]
     if 0 == len(negList):
         print('[Info] No negative refined!')
         return negFeat
+    # define variables.
+    negFeatNew = []
     # refine data.
     for item in negFeat:
         fileName = item[0]
@@ -136,6 +140,8 @@ def FindTomekLinks(distMatrix):
         outIndex[ind] = minInd
         minDist[ind] = float("inf")
     # save file
+    if not os.path.exists(tmpPath):
+        os.mkdir(tmpPath)
     np.save(tmpPath + '/outIndex.npy', outIndex)
     return outIndex
 
