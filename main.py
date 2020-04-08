@@ -60,7 +60,7 @@ def ReadData():
     # find file names for positive samples.
     posList = [file for root, ds, fs in os.walk(posPath) for file in fs]
     if os.path.exists(judPosPath):
-        posListExt = [file for root, ds, fs in os.walk(judPosPath) for file in fs]
+        posListExt = [os.path.splitext(file)[0] for root, ds, fs in os.walk(judPosPath) for file in fs]
         if len(posListExt):
             posList.extend(posListExt)
     else:
@@ -87,7 +87,7 @@ def ReadData():
     if 0 == len(posList):
         print('[Info] Complete loading all positive samples. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     else:
-        print('[Error] Not all positive samples loaded!')
+        print('[Error] Not all positive samples loaded! (para: %d)' % (len(posList)))
         print(posList)
     return posFeat, negFeat
 
@@ -100,7 +100,7 @@ def RefineNegative(negFeat):
         print('[Info] No negative refined! [TIME: %s sec]' % (round((time.time() - start_time),2)))
         return negFeat
     # get negative list.
-    negList = [file for root, ds, fs in os.walk(judNegPath) for file in fs]
+    negList = [os.path.splitext(file)[0] for root, ds, fs in os.walk(judNegPath) for file in fs]
     if 0 == len(negList):
         print('[Info] No negative refined! [TIME: %s sec]' % (round((time.time() - start_time),2)))
         return negFeat
@@ -125,7 +125,7 @@ def RefineNegative(negFeat):
     if 0 == len(negList):
         print('[Info] Complete refining all negative samples. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     else:
-        print('[Error] Not all negative samples refined!')
+        print('[Error] Not all negative samples refined! (para: %d)' % (len(negList)))
         print(negList)
     return negFeatNew
 
