@@ -5,6 +5,7 @@
 import os
 import sys
 import shutil
+import html
 import numpy as np
 import pandas as pd
 os.system('pip install PyQt5')
@@ -36,6 +37,7 @@ BtnGap = 40
 BtnW, BtnH = 200, 40
 WinW = TxtInt + TxtW + 2 * BtnInt + BtnW
 EyeCare = 0
+DiffColor = 0
 
 # class Example
 class Annotation(QWidget):
@@ -112,23 +114,30 @@ class Annotation(QWidget):
 
         # Setting
         self.lb3 = QLabel(self)
-        self.lb3.move(TxtInt + TxtW + BtnInt, WinH - 3 * TxtInt - 4 * BtnH)
+        self.lb3.move(TxtInt + TxtW + BtnInt, WinH - 4 * TxtInt - 5 * BtnH)
         self.lb3.resize(BtnW, BtnH)
         self.lb3.setText("Setting Preferences")
         self.lb3.setStyleSheet("font: 14pt;")
         self.lb3.setAlignment(Qt.AlignCenter)
         # Button-
         self.btnS1 = QPushButton("Change Font Size", self)
-        self.btnS1.move(TxtInt + TxtW + BtnInt, WinH - 2 * TxtInt - 3 * BtnH)
+        self.btnS1.move(TxtInt + TxtW + BtnInt, WinH - 3 * TxtInt - 4 * BtnH)
         self.btnS1.resize(BtnW, BtnH)
         self.btnS1.setStyleSheet("font: 14pt;")
         self.btnS1.clicked.connect(self.ChangeFontSize)
         # Button
         self.btnS2 = QPushButton("Eye-Care Mode", self)
-        self.btnS2.move(TxtInt + TxtW + BtnInt, WinH - TxtInt - 2 * BtnH)
+        self.btnS2.move(TxtInt + TxtW + BtnInt, WinH - 2 * TxtInt - 3 * BtnH)
         self.btnS2.resize(BtnW, BtnH)
         self.btnS2.setStyleSheet("font: 14pt;")
         self.btnS2.clicked.connect(self.EyeCareMode)
+        # self.EyeCareMode() # default for eye-care
+        # Button
+        self.btnS3 = QPushButton("Show Diff Color", self)
+        self.btnS3.move(TxtInt + TxtW + BtnInt, WinH - TxtInt - 2 * BtnH)
+        self.btnS3.resize(BtnW, BtnH)
+        self.btnS3.setStyleSheet("font: 14pt;")
+        self.btnS3.clicked.connect(self.DiffColor)
         # show
         self.show()
 
@@ -140,12 +149,38 @@ class Annotation(QWidget):
 
     def UpdateScreen(self):
         if -1 == self.index:
-            text = 'All data has been labeled.\n[Developed by Shu W.]'
+            text = 'All data has been labeled.\n\n[Developed by Shu W.]'
+            self.textbox.setText(text)
+            self.indexbox.setText('N/A')
+            self.fnamebox.setText(str(self.filename))
         else:
-            text = open(os.path.join(candiPath, self.filename)).read()
-        self.textbox.setText(text)
-        self.indexbox.setText(str(self.index) + '/' + str(len(self.df)))
-        self.fnamebox.setText(str(self.filename))
+            # update textbox
+            self.textbox.clear()
+            fp = open(os.path.join(candiPath, self.filename))
+            lines = fp.readlines()
+            if 0 == DiffColor:  # close all diff color.
+                for line in lines:  # for each line.
+                    line = html.escape(line)
+                    line = line.replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")
+                    line = line.replace(" ", "&nbsp;")
+                    self.textbox.append('<html style="color:black;">{}<\html>'.format(line))
+            elif 1 == DiffColor:  # open all diff color.
+                for line in lines:  # for each line.
+                    line = html.escape(line)
+                    line = line.replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")
+                    line = line.replace(" ", "&nbsp;")
+                    if '+' == line[0]:
+                        self.textbox.append('<html style="color:green;">{}<\html>'.format(line))
+                    elif '-' == line[0]:
+                        self.textbox.append('<html style="color:red;">{}<\html>'.format(line))
+                    elif '@@' == line[0:2]:
+                        self.textbox.append('<html style="color:rgb(170,0,170);">{}<\html>'.format(line))
+                    else:
+                        self.textbox.append('<html style="color:black;">{}<\html>'.format(line))
+            self.textbox.moveCursor(1)
+            # update index and filename.
+            self.indexbox.setText(str(self.index) + '/' + str(len(self.df)))
+            self.fnamebox.setText(str(self.filename))
         return
 
     def SecPatchButton(self):
@@ -214,9 +249,9 @@ class Annotation(QWidget):
     def EyeCareMode(self):
         global EyeCare
         if 0 == EyeCare:
-            self.textbox.setStyleSheet("background-color: rgb(225, 237, 205);")
-            self.indexbox.setStyleSheet("background-color: rgb(225, 237, 205);")
-            self.fnamebox.setStyleSheet("background-color: rgb(225, 237, 205);")
+            self.textbox.setStyleSheet("background-color: rgb(227, 237, 205);")
+            self.indexbox.setStyleSheet("background-color: rgb(227, 237, 205);")
+            self.fnamebox.setStyleSheet("background-color: rgb(227, 237, 205);")
             self.btnS2.setText('Nomarl Mode')
             EyeCare = 1
         elif 1 == EyeCare:
@@ -225,6 +260,17 @@ class Annotation(QWidget):
             self.fnamebox.setStyleSheet("background-color: rgb(255, 255, 255);")
             self.btnS2.setText('Eye-Care Mode')
             EyeCare = 0
+        return
+
+    def DiffColor(self):
+        global DiffColor
+        if 0 == DiffColor:
+            self.btnS3.setText('Close Diff Color')
+            DiffColor = 1
+        elif 1 == DiffColor:
+            self.btnS3.setText('Show Diff Color')
+            DiffColor = 0
+        self.UpdateScreen()
         return
 
 def PreProcess():
