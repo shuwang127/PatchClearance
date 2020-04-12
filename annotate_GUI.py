@@ -8,7 +8,10 @@ import shutil
 import html
 import numpy as np
 import pandas as pd
-os.system('pip install PyQt5')
+try:
+    import PyQt5
+except:
+    os.system('pip install PyQt5')
 from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtWidgets import QTextBrowser
 from PyQt5.QtWidgets import QLabel
@@ -48,7 +51,7 @@ class Annotation(QWidget):
         self.filename = ''
         self.index = 0
         # main window.
-        self.setWindowTitle("Security Patch Annotation GUI")
+        self.setWindowTitle("Security Patch Annotation GUI Version 1.0")
         self.move(int((ScrW-WinW)/2), int((ScrH-WinH)/2))
         self.setFixedSize(WinW, WinH)
         self.InitUI()
@@ -89,7 +92,7 @@ class Annotation(QWidget):
         self.btn0 = QPushButton("Non-Security Patch", self)
         self.btn0.move(TxtInt + TxtW + BtnInt, 2 * TxtInt + 2 * BtnH + BtnGap)
         self.btn0.resize(BtnW, BtnH)
-        self.btn0.setStyleSheet("font: 14pt; color: rgb(51, 153, 0);")
+        self.btn0.setStyleSheet("font: 14pt; color: rgb(51, 150, 0);")
         self.btn0.clicked.connect(self.NonSecPatchButton)
 
         # Important Operation
@@ -170,11 +173,13 @@ class Annotation(QWidget):
                     line = line.replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")
                     line = line.replace(" ", "&nbsp;")
                     if '+' == line[0]:
-                        self.textbox.append('<html style="color:green;">{}<\html>'.format(line))
+                        self.textbox.append('<html style="color:rgb(0,100,0);background-color:rgb(172,242,189);font-weight:bold;">{}<\html>'.format(line))
+                        #self.textbox.append('<html style="color:rgb(0,153,0);">{}<\html>'.format(line))
                     elif '-' == line[0]:
-                        self.textbox.append('<html style="color:red;">{}<\html>'.format(line))
+                        self.textbox.append('<html style="color:rgb(150,0,0);background-color:rgb(253,184,192);font-weight:bold;">{}<\html>'.format(line))
+                        #self.textbox.append('<html style="color:rgb(204,0,0);">{}<\html>'.format(line))
                     elif '@@' == line[0:2]:
-                        self.textbox.append('<html style="color:rgb(170,0,170);">{}<\html>'.format(line))
+                        self.textbox.append('<html style="color:rgb(200,0,220);font-weight:bold;">{}<\html>'.format(line))
                     else:
                         self.textbox.append('<html style="color:black;">{}<\html>'.format(line))
             self.textbox.moveCursor(1)
