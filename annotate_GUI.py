@@ -159,7 +159,7 @@ class Annotation(QWidget):
         else:
             # update textbox
             self.textbox.clear()
-            fp = open(os.path.join(candiPath, self.filename))
+            fp = open(os.path.join(candiPath, self.filename), errors='ignore')
             lines = fp.readlines()
             if 0 == DiffColor:  # close all diff color.
                 for line in lines:  # for each line.
@@ -244,7 +244,7 @@ class Annotation(QWidget):
     def ChangeFontSize(self):
         global TxtFont
         item, ok = QInputDialog().getInt(self, 'Font Setting', '<html style="font-size:10pt;">Font Size:<\html>',
-                                         value = TxtFont, min = 8, max = 20, step = 1)
+                                         value = TxtFont, min = 8, max = 30, step = 1)
         if ok:
             TxtFont = int(item)
             self.textbox.setFont(QFont("Consolas", TxtFont))
