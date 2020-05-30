@@ -4,9 +4,10 @@ import Levenshtein
 import pandas as pd
 
 # global path.
-rootPath = './'
+rootPath = '../'
 posPath = rootPath + '/security_patch/'
 negPath = rootPath + '/random_commit/'
+csvPath = rootPath + '/csvfiles/'
 
 # keyword definition.
 MI_keyword = ["overflow", "leak", "buffer", "race", "integer", "null", "dereference", "free", "lock", "byte", \
@@ -139,6 +140,7 @@ not_zero = []
 preprocess = []
 
 def main():
+	'''
 	# read the positive files (1).
 	for root, ds, fs in os.walk(posPath):
 		for file in fs:
@@ -146,12 +148,21 @@ def main():
 			print(filename)
 			Process(filename, '1')
 	# read the negative files (0).
-	for root, ds, fs in os.walk(negPath):
+	for root, ds, fs in os.walk(negPath + 'commit01'):
 		for file in fs:
 			filename = os.path.join(root, file)
 			print(filename)
 			Process(filename, '0')
-	Write2File('feature.csv')
+	Write2File(csvPath + 'feature01.csv')
+	'''
+	folder = 2  # 2-30
+	for root, ds, fs in os.walk(negPath + 'commit' + str(folder).zfill(2)):
+		for file in fs:
+			filename = os.path.join(root, file)
+			print(filename)
+			Process(filename, '0')
+	Write2File(csvPath + 'feature' + str(folder).zfill(2) + '.csv')
+
 	return
 
 def Process(filename, goldtruth):

@@ -34,6 +34,7 @@ posPath = rootPath + '/security_patch/'
 negPath = rootPath + '/random_commit/'
 tmpPath = rootPath + '/temp/'
 candiPath = rootPath + '/candidates/'
+csvPath = rootPath + '/csvfiles/'
 # judgement path.
 judPath = rootPath + '/judged/'
 judPosPath = judPath + '/positives/'
@@ -46,9 +47,9 @@ def main():
     negFeat = RefineNegative(posFeat, negFeat)
     VerifyNegative(posFeat, negFeat)
     # feature space matching.
-    #distMatrix = GetDistMatrix(posFeat, negFeat) # tmpPath + '/distMatrix.npy'
-    #outIndex = FindTomekLinks(distMatrix) # tmpPath + '/outIndex.npy'
-    #GetCandidates(outIndex, negFeat)
+    distMatrix = GetDistMatrix(posFeat, negFeat) # tmpPath + '/distMatrix.npy'
+    outIndex = FindTomekLinks(distMatrix) # tmpPath + '/outIndex.npy'
+    GetCandidates(outIndex, negFeat)
     return
 
 def ReadData():
@@ -57,8 +58,13 @@ def ReadData():
     negFeat = []
 
     # read data from csv file.
-    dset = pd.read_csv('feature.csv')
-    dfeat = dset.values.tolist()
+    csvfiles = [file for root, ds, fs in os.walk(csvPath) for file in fs]
+    dfeat = []
+    for file in csvfiles:
+        filename = os.path.join(csvPath, file)
+        dset = pd.read_csv(filename)
+        dtmp = dset.values.tolist()
+        dfeat.extend(dtmp)
 
     # find file names for positive samples.
     posList = [file for root, ds, fs in os.walk(posPath) for file in fs]
