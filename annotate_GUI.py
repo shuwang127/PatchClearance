@@ -29,12 +29,12 @@ judFile = tempPath + '/judge.csv'
 judPosPath = tempPath + '/positives/'
 judNegPath = tempPath + '/negatives/'
 # global size
-ScrW, ScrH = 1920, 1080
-WinW, WinH = 1800, 980 # WinW=TxtInt+TxtW+2*BtnInt+BtnW
+ScrW, ScrH = 2560, 1440
+WinW, WinH = 2200, 1200 # WinW=TxtInt+TxtW+2*BtnInt+BtnW
 TxtInt = 25
 BoxW, BoxH = 5 * TxtInt, 35
-TxtFont = 14
-TxtW, TxtH = 1200, (WinH - 3 * TxtInt - BoxH)
+TxtFont = 22
+TxtW, TxtH = 1600, (WinH - 3 * TxtInt - BoxH)
 BtnInt = 50
 BtnGap = 40
 BtnW, BtnH = 200, 40

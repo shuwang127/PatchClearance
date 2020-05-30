@@ -24,6 +24,7 @@
 import os
 import time
 import shutil
+import random
 import numpy as np
 import pandas as pd
 
@@ -42,31 +43,34 @@ start_time = time.time() #mark start time
 
 def main():
     posFeat, negFeat = ReadData()
-    negFeat = RefineNegative(negFeat)
-    distMatrix = GetDistMatrix(posFeat, negFeat)
-    # distMatrix = np.load(tmpPath + '/distMatrix.npy')
-    outIndex = FindTomekLinks(distMatrix)
-    # outIndex = np.load(tmpPath + '/outIndex.npy')
-    GetCandidates(outIndex, negFeat)
+    negFeat = RefineNegative(posFeat, negFeat)
+    VerifyNegative(posFeat, negFeat)
+    # feature space matching.
+    #distMatrix = GetDistMatrix(posFeat, negFeat) # tmpPath + '/distMatrix.npy'
+    #outIndex = FindTomekLinks(distMatrix) # tmpPath + '/outIndex.npy'
+    #GetCandidates(outIndex, negFeat)
     return
 
 def ReadData():
     # define variable.
     posFeat = []
     negFeat = []
+
     # read data from csv file.
     dset = pd.read_csv('feature.csv')
     dfeat = dset.values.tolist()
+
     # find file names for positive samples.
     posList = [file for root, ds, fs in os.walk(posPath) for file in fs]
     if os.path.exists(judPosPath):
-        posListExt = [os.path.splitext(file)[0] for root, ds, fs in os.walk(judPosPath) for file in fs]
+        posListExt = [file for root, ds, fs in os.walk(judPosPath) for file in fs]
         if len(posListExt):
             posList.extend(posListExt)
     else:
         if not os.path.exists(judPath):
             os.mkdir(judPath)
         os.mkdir(judPosPath)
+
     # separate the data.
     for item in dfeat:
         fileName = item[1]
@@ -82,8 +86,9 @@ def ReadData():
             posFeat.append(item[1:])
         else:
             negFeat.append(item[1:])
+
     # complete check.
-    print('[Info] Loaded %d positives and %d negatives (totally %d).' % (len(posFeat), len(negFeat), len(posFeat)+len(negFeat)))
+    print('[Info] Loaded %d positive and %d random samples (totally %d).' % (len(posFeat), len(negFeat), len(posFeat)+len(negFeat)))
     if 0 == len(posList):
         print('[Info] Complete loading all positive samples. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     else:
@@ -91,7 +96,7 @@ def ReadData():
         print(posList)
     return posFeat, negFeat
 
-def RefineNegative(negFeat):
+def RefineNegative(posFeat, negFeat):
     # validate.
     if not os.path.exists(judNegPath):
         if not os.path.exists(judPath):
@@ -99,11 +104,14 @@ def RefineNegative(negFeat):
         os.mkdir(judNegPath)
         print('[Info] No negative refined! [TIME: %s sec]' % (round((time.time() - start_time),2)))
         return negFeat
+
     # get negative list.
-    negList = [os.path.splitext(file)[0] for root, ds, fs in os.walk(judNegPath) for file in fs]
-    if 0 == len(negList):
+    negList = [file for root, ds, fs in os.walk(judNegPath) for file in fs]
+    numList = len(negList)
+    if 0 == numList:
         print('[Info] No negative refined! [TIME: %s sec]' % (round((time.time() - start_time),2)))
         return negFeat
+
     # define variables.
     negFeatNew = []
     # refine data.
@@ -121,11 +129,41 @@ def RefineNegative(negFeat):
             pass
         else:
             negFeatNew.append(item)
+
     # complete check.
+    print('[Info] Loaded %d positive, %d negative, %d random samples (totally %d).' % (len(posFeat), numList - len(negList), len(negFeatNew), len(posFeat) + len(negFeatNew) + numList - len(negList)))
     if 0 == len(negList):
-        print('[Info] Complete refining all negative samples. [TIME: %s sec]' % (round((time.time() - start_time),2)))
+        print('[Info] Complete refining all random samples. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     else:
-        print('[Error] Not all negative samples refined! (para: %d)' % (len(negList)))
+        print('[Error] Not all random samples refined! (para: %d)' % (len(negList)))
+        print(negList)
+    return negFeatNew
+
+def VerifyNegative(posFeat, negFeat):
+    # get existing
+    negList = [file for root, ds, fs in os.walk(negPath) for file in fs]
+    judNegList = [file for root, ds, fs in os.walk(judNegPath) for file in fs]
+    judList = [file for root, ds, fs in os.walk(judPath) for file in fs]
+    # define variables.
+    negFeatNew = []
+    # verify data.
+    for item in negFeat:
+        fileName = item[0]
+        for negName in negList:
+            if negName in fileName:
+                negFeatNew.append(item)
+                negList.remove(negName)
+                break
+
+    # complete check.
+    print('[Info] Loaded %d positive, %d negative, %d random samples (totally %d).' % (len(posFeat), len(judNegList), len(negFeatNew), len(posFeat) + len(judNegList) + len(negFeatNew)))
+    if len(judList) == len(negList):
+        print('[Info] Complete verify all random samples. [TIME: %s sec]' % (round((time.time() - start_time),2)))
+    else:
+        print('[Error] Find new random samples in %s! (para: %d)' % (negPath, len(negList) - len(judList)))
+        for file in judList:
+            if file in negList:
+                negList.remove(file)
         print(negList)
     return negFeatNew
 
@@ -219,6 +257,16 @@ def GetWeights():
     # print(max(weights)) # 10000
     # print(min(weights)) # 1/300
     return weights
+
+def RandomChoose(Feat):
+    featLen = len(Feat)
+    featList = list(range(featLen))
+    random.shuffle(featList)
+    for i in range(500):
+        index = featList[i]
+        filename = Feat[index][0]
+        shutil.copy(filename, './random_choose/')
+    return
 
 if __name__ == '__main__':
     main()
