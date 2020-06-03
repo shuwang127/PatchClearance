@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import Levenshtein
 import pandas as pd
 
@@ -140,30 +141,27 @@ not_zero = []
 preprocess = []
 
 def main():
-	'''
-	# read the positive files (1).
-	for root, ds, fs in os.walk(posPath):
-		for file in fs:
-			filename = os.path.join(root, file)
-			print(filename)
-			Process(filename, '1')
-	# read the negative files (0).
-	for root, ds, fs in os.walk(negPath + 'commit01'):
-		for file in fs:
-			filename = os.path.join(root, file)
-			print(filename)
-			Process(filename, '0')
-	Write2File(csvPath + 'feature01.csv')
-	'''
-	folder = 9  # 2-30
-	cnt = 1
-	for root, ds, fs in os.walk(negPath + 'commit' + str(folder).zfill(2)):
-		for file in fs:
-			filename = os.path.join(root, file)
-			print(cnt, filename)
-			Process(filename, '0')
-			cnt += 1
-	Write2File(csvPath + 'feature' + str(folder).zfill(2) + '.csv')
+	folder = sys.argv[1]  # 0, 1-30
+	if 0 == int(float(folder)):
+		# read the positive files (1).
+		cnt = 1
+		for root, ds, fs in os.walk(posPath):
+			for file in fs:
+				filename = os.path.join(root, file)
+				print(cnt, filename)
+				Process(filename, '1')
+				cnt += 1
+	else:
+		# read the negative files (0).
+		cnt = 1
+		for root, ds, fs in os.walk(negPath + 'commit' + folder.zfill(2)):
+			for file in fs:
+				filename = os.path.join(root, file)
+				print(cnt, filename)
+				Process(filename, '0')
+				cnt += 1
+
+	Write2File(csvPath + 'feature' + folder.zfill(2) + '.csv')
 
 	return
 
