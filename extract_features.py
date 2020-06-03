@@ -4,7 +4,7 @@ import Levenshtein
 import pandas as pd
 
 # global path.
-rootPath = '../'
+rootPath = './'
 posPath = rootPath + '/security_patch/'
 negPath = rootPath + '/random_commit/'
 csvPath = rootPath + '/csvfiles/'
@@ -155,12 +155,14 @@ def main():
 			Process(filename, '0')
 	Write2File(csvPath + 'feature01.csv')
 	'''
-	folder = 2  # 2-30
+	folder = 9  # 2-30
+	cnt = 1
 	for root, ds, fs in os.walk(negPath + 'commit' + str(folder).zfill(2)):
 		for file in fs:
 			filename = os.path.join(root, file)
-			print(filename)
+			print(cnt, filename)
 			Process(filename, '0')
+			cnt += 1
 	Write2File(csvPath + 'feature' + str(folder).zfill(2) + '.csv')
 
 	return

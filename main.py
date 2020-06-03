@@ -45,7 +45,7 @@ start_time = time.time() #mark start time
 def main():
     posFeat, negFeat = ReadData()
     negFeat = RefineNegative(posFeat, negFeat)
-    VerifyNegative(posFeat, negFeat)
+    negFeat = VerifyNegative(posFeat, negFeat)
     # feature space matching.
     distMatrix = GetDistMatrix(posFeat, negFeat) # tmpPath + '/distMatrix.npy'
     outIndex = FindTomekLinks(distMatrix) # tmpPath + '/outIndex.npy'
@@ -243,8 +243,13 @@ def GetCandidates(outIndex, negFeat):
 
 def GetWeights():
     # input the data set.
-    dset = pd.read_csv('feature.csv')
-    dfeat = dset.values.tolist()
+    csvfiles = [file for root, ds, fs in os.walk(csvPath) for file in fs]
+    dfeat = []
+    for file in csvfiles:
+        filename = os.path.join(csvPath, file)
+        dset = pd.read_csv(filename)
+        dtmp = dset.values.tolist()
+        dfeat.extend(dtmp)
     # convert to array..
     for item in dfeat:
         item.pop(1)
