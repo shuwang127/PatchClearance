@@ -4,7 +4,7 @@
     Developer: Shu Wang
     Date: 2020-04-03
     File Structure:
-    Patch
+    SecurityPatch
         |-- candidates              # found samples need to be judged.
         |-- csvfiles                # feature files.
                 |-- feature00.csv   # positive feature file.
