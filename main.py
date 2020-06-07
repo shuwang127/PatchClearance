@@ -3,19 +3,28 @@
     Developer: Shu Wang
     Date: 2020-04-03
     File Structure:
-    Patch
+    SecurityPatch
         |-- candidates              # found samples need to be judged.
+        |-- csvfiles                # feature files.
+                |-- feature00.csv   # positive feature file.
+                |-- feature01.csv   # negative feature file.
         |-- judged                  # already judged samples.
                 |-- negatives
                 |-- positives
         |-- matlab                  # matlab program.
         |-- random_commit           # unknown patches.
+                |-- commit01
         |-- security_patch          # positive patches.
         |-- temp                    # temporary stored variables.
                 |-- distMatrix.npy
                 |-- outIndex.npy
+        |-- temp_judged             # temp folder for GUI annotation.
+                |-- negatives
+                |-- positives
+                |-- judged.csv      # storage for annotation. DO NOT DELETE!
+        |-- annotate_GUI.py         # GUI for annotate candidate patches.
         |-- extract_features.py     # extract features for random_commit and security_patch.
-        |-- feature.csv             # feature file.
+        |-- get_dataset.py          # get the 30-folder negative dataset.
         |-- main.py                 # main entrance.
     Usage:
         python main.py
@@ -53,11 +62,17 @@ def main():
     return
 
 def ReadData():
+    '''
+    Read all data from the folder './csvfiles/'.
+    Divide these data into positive samples and other samples.
+    :return: posFeat - features of positive samples. [orig_positive + judge_positive]
+             negFeat - features of other samples. [judge_negative + random + not_exist]
+    '''
     # define variable.
     posFeat = []
     negFeat = []
 
-    # read data from csv file.
+    # read data from csv files.
     csvfiles = [file for root, ds, fs in os.walk(csvPath) for file in fs]
     dfeat = []
     for file in csvfiles:
@@ -103,6 +118,12 @@ def ReadData():
     return posFeat, negFeat
 
 def RefineNegative(posFeat, negFeat):
+    '''
+    Separate the judged negative samples from the negFeat.
+    :param posFeat: features of positive samples. [orig_positive + judge_positive]
+    :param negFeat: features of other samples. [judge_negative + random + not_exist]
+    :return: negFeatNew - features of random samples. [random + not_exist]
+    '''
     # validate.
     if not os.path.exists(judNegPath):
         if not os.path.exists(judPath):
@@ -146,6 +167,12 @@ def RefineNegative(posFeat, negFeat):
     return negFeatNew
 
 def VerifyNegative(posFeat, negFeat):
+    '''
+    Verify all random samples are in the folder './random_commit/'.
+    :param posFeat: features of positive samples. [orig_positive + judge_positive]
+    :param negFeat: features of random samples. [random + not_exist]
+    :return: negFeatNew - features of random samples. [random]
+    '''
     # get existing
     negList = [file for root, ds, fs in os.walk(negPath) for file in fs]
     judNegList = [file for root, ds, fs in os.walk(judNegPath) for file in fs]
@@ -163,9 +190,11 @@ def VerifyNegative(posFeat, negFeat):
 
     # complete check.
     print('[Info] Loaded %d positive, %d negative, %d random samples (totally %d).' % (len(posFeat), len(judNegList), len(negFeatNew), len(posFeat) + len(judNegList) + len(negFeatNew)))
-    if len(judList) == len(negList):
-        print('[Info] Complete verify all random samples. [TIME: %s sec]' % (round((time.time() - start_time),2)))
-    else:
+    if len(judList) == len(negList): # random_commit + security_patch == csvfiles.
+        print('[Info] Complete verify all random samples. [TIME: %s sec]' % (round((time.time() - start_time), 2)))
+    elif len(negList) == 0: # random_commit + security_patch [in] csvfiles.
+        print('[Info] Complete verify all random samples. [TIME: %s sec]' % (round((time.time() - start_time), 2)))
+    else: # find samples in random_commit [not in] csvfiles.
         print('[Error] Find new random samples in %s! (para: %d)' % (negPath, len(negList) - len(judList)))
         for file in judList:
             if file in negList:
@@ -174,12 +203,20 @@ def VerifyNegative(posFeat, negFeat):
     return negFeatNew
 
 def GetDistMatrix(posFeat, negFeat):
+    '''
+    Get the distance matrix from positive samples to random samples.
+    Store the distance matrix in the path './tmp/distMatrix.npy'.
+    :param posFeat: features of positive samples. [orig_positive + judge_positive]
+    :param negFeat: features of random samples. [random]
+    :return: distMatrix - distance matrix. [num_positive * num_random]
+    '''
     # get distance between two lists.
     def GetDist(list1, list2, weights):
         dist = [((list1[i] - list2[i]) * weights[i]) ** 2 for i in range(len(weights))]
         # print(dist)
         # print(sum(dist))
         return sum(dist)
+
     # get weights.
     weights = GetWeights()
     #GetDist(posFeat[0][1:], negFeat[0][1:], weights)
@@ -192,6 +229,7 @@ def GetDistMatrix(posFeat, negFeat):
         for iNeg in range(negNum):
             distMatrix[iPos][iNeg] = GetDist(posFeat[iPos][1:], negFeat[iNeg][1:], weights)
         print('> [Proc] Sample %d / %d ... [TIME: %s sec]' % (iPos+1, posNum, round((time.time() - start_time),2)))
+
     # save to local.
     if not os.path.exists(tmpPath):
         os.mkdir(tmpPath)
@@ -200,6 +238,11 @@ def GetDistMatrix(posFeat, negFeat):
     return distMatrix
 
 def FindTomekLinks(distMatrix):
+    '''
+    Find tomek links from distance matrix.
+    :param distMatrix: distance matrix. [num_positive * num_random]
+    :return: outIndex - the index of corresponding samples in tomek pairs. [num_positive]
+    '''
     # dimension.
     posNum = len(distMatrix)
     negNum = len(distMatrix[0])
@@ -222,6 +265,7 @@ def FindTomekLinks(distMatrix):
         outIndex[ind] = minInd
         minDist[ind] = float("inf")
         print('> [Proc] Tomek Link %d / %d ... [TIME: %s sec]' % (len(set(outIndex))-1, posNum, round((time.time() - start_time), 2)))
+
     # save file
     if not os.path.exists(tmpPath):
         os.mkdir(tmpPath)
@@ -230,6 +274,13 @@ def FindTomekLinks(distMatrix):
     return outIndex
 
 def GetCandidates(outIndex, negFeat):
+    '''
+    Find all the tomek link candidates.
+    Store these samples in the folder './candidates/'.
+    :param outIndex: the index of corresponding samples in tomek pairs. [num_positive]
+    :param negFeat: features of random samples. [random]
+    :return: 1 - success.
+    '''
     # validate.
     if os.path.exists(candiPath):
         shutil.rmtree(candiPath)
@@ -242,6 +293,10 @@ def GetCandidates(outIndex, negFeat):
     return 1
 
 def GetWeights():
+    '''
+    Get the weights for each dimension of features.
+    :return: weights - weights for each dimension of features. [dim_feature]
+    '''
     # input the data set.
     csvfiles = [file for root, ds, fs in os.walk(csvPath) for file in fs]
     dfeat = []
@@ -270,6 +325,11 @@ def GetWeights():
     return weights
 
 def RandomChoose(Feat):
+    '''
+    Randomly choose samples from the Feat.
+    :param Feat: features of samples.
+    :return: void.
+    '''
     featLen = len(Feat)
     featList = list(range(featLen))
     random.shuffle(featList)
