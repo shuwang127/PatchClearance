@@ -1,0 +1,67 @@
+commit 0dff91d3ec7c7bfefa170e5e9cd5a12444309c95
+Author: Gang Wei <gang.wei@intel.com>
+Date:   Wed Sep 21 02:07:48 2016 +0800
+
+    fix some password related issues
+    
+    those issues are introduced by below commit:
+    
+    commit 5a74c61281b013e0b916e7cd2baae93e01bbf77a
+    Author: Gang Wei <gang.wei@intel.com>
+    Date:   Thu Jun 23 20:48:04 2016 +0800
+    
+        Add -X option to enable Hex format password
+
+diff --git a/src/tpm2_getmanufec.cpp b/src/tpm2_getmanufec.cpp
+index 4ed08eb..6373777 100644
+--- a/src/tpm2_getmanufec.cpp
++++ b/src/tpm2_getmanufec.cpp
+@@ -201,8 +201,8 @@ int createEKHandle()
+ 
+     if (strlen(ekPasswd) > 0 && !hexPasswd)
+     {
+-        sessionData.hmac.t.size = strlen(ekPasswd);
+-        memcpy( &sessionData.hmac.t.buffer[0], ekPasswd, sessionData.hmac.t.size );
++        inSensitive.t.sensitive.userAuth.t.size = strlen(ekPasswd);
++        memcpy( &inSensitive.t.sensitive.userAuth.t.buffer[0], ekPasswd, inSensitive.t.sensitive.userAuth.t.size );
+     }
+     else if (strlen(ekPasswd) > 0 && hexPasswd)
+     {
+diff --git a/src/tpm2_getpubak.cpp b/src/tpm2_getpubak.cpp
+index 9b6f3cc..2fb9d66 100644
+--- a/src/tpm2_getpubak.cpp
++++ b/src/tpm2_getpubak.cpp
+@@ -235,16 +235,11 @@ int createAK()
+ 
+     // set the object Auth value
+     inSensitive.t.sensitive.userAuth.t.size = 0;
+-    if( strlen( akPasswd ) > 0 )
++    if (strlen(akPasswd) > 0 && !hexPasswd)
+     {
+         inSensitive.t.sensitive.userAuth.t.size = strlen( akPasswd );
+         memcpy( &( inSensitive.t.sensitive.userAuth.t.buffer[0] ), &( akPasswd[0] ), inSensitive.t.sensitive.userAuth.t.size );
+     }
+-    if (strlen(akPasswd) > 0 && !hexPasswd)
+-    {
+-        sessionData.hmac.t.size = strlen(akPasswd);
+-        memcpy( &sessionData.hmac.t.buffer[0], akPasswd, sessionData.hmac.t.size );
+-    }
+     else if (strlen(akPasswd) > 0 && hexPasswd)
+     {
+         inSensitive.t.sensitive.userAuth.t.size = sizeof(inSensitive.t.sensitive.userAuth) - 2;
+diff --git a/src/tpm2_getpubek.cpp b/src/tpm2_getpubek.cpp
+index 9d542dd..7802d35 100644
+--- a/src/tpm2_getpubek.cpp
++++ b/src/tpm2_getpubek.cpp
+@@ -187,8 +187,8 @@ int createEKHandle()
+ 
+     if (strlen(ekPasswd) > 0 && !hexPasswd)
+     {
+-        sessionData.hmac.t.size = strlen(ekPasswd);
+-        memcpy( &sessionData.hmac.t.buffer[0], ekPasswd, sessionData.hmac.t.size );
++        inSensitive.t.sensitive.userAuth.t.size = strlen(ekPasswd);
++        memcpy( &inSensitive.t.sensitive.userAuth.t.buffer[0], ekPasswd, inSensitive.t.sensitive.userAuth.t.size );
+     }
+     else if (strlen(ekPasswd) > 0 && hexPasswd)
+     {
+
