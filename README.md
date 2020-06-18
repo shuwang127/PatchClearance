@@ -27,5 +27,6 @@
         |-- extract_features.py     # extract features for random_commit and security_patch.
         |-- get_dataset.py          # get the 30-folder negative dataset.
         |-- main.py                 # main entrance.
+        |-- README.md               # this file.
     Usage:
         python main.py
