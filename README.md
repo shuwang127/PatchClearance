@@ -28,4 +28,4 @@
         |-- get_dataset.py          # get the 30-folder negative dataset.
         |-- main.py                 # main entrance.
     Usage:
-        >> python main.py
+        python main.py
