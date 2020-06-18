@@ -1,10 +1,10 @@
-# SecurityPatch
+# PatchClearance
 
     Security Patch Group: Data Cleaning Task.
     Developer: Shu Wang
-    Date: 2020-06-12
+    Date: 2020-06-18
     File Structure:
-    SecurityPatch
+    PatchClearance
         |-- candidates              # found samples need to be judged.
         |-- csvfiles                # feature files.
                 |-- feature00.csv   # positive feature file.
@@ -28,4 +28,4 @@
         |-- get_dataset.py          # get the 30-folder negative dataset.
         |-- main.py                 # main entrance.
     Usage:
-        python main.py
+        >> python main.py
