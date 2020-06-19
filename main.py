@@ -1,9 +1,9 @@
 '''
     Security Patch Group: Data Cleaning Task.
     Developer: Shu Wang
-    Date: 2020-04-03
+    Date: 2020-06-18
     File Structure:
-    SecurityPatch
+    PatchClearance
         |-- candidates              # found samples need to be judged.
         |-- csvfiles                # feature files.
                 |-- feature00.csv   # positive feature file.
