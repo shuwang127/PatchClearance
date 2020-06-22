@@ -233,7 +233,7 @@ def GetDistMatrix(posFeat, negFeat):
     # save to local.
     if not os.path.exists(tmpPath):
         os.mkdir(tmpPath)
-    np.save(tmpPath + '/distMatrix.npy', distMatrix)
+    #np.save(tmpPath + '/distMatrix.npy', distMatrix)
     print('[Info] Get the distance matrix. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     return distMatrix
 
@@ -287,7 +287,7 @@ def GetCandidates(outIndex, negFeat):
     os.mkdir(candiPath)
     # copy file
     for i in outIndex:
-        source = negFeat[i][0]
+        source = negFeat[i][0].replace('\\', '/')
         shutil.copy(source, candiPath)
     print('[Info] Get all the candidates. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     return 1
@@ -335,7 +335,7 @@ def RandomChoose(Feat):
     random.shuffle(featList)
     for i in range(500):
         index = featList[i]
-        filename = Feat[index][0]
+        filename = Feat[index][0].replace('\\', '/')
         shutil.copy(filename, './random_choose/')
     return
 
