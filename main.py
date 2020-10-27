@@ -58,7 +58,7 @@ def main():
     # feature space matching.
     distMatrix = GetDistMatrix(posFeat, negFeat) # tmpPath + '/distMatrix.npy'
     outIndex = FindTomekLinks(distMatrix) # tmpPath + '/outIndex.npy'
-    GetCandidates(outIndex, negFeat)
+    GetCandidates(outIndex, negFeat, posFeat) # tmpPath + '/nearest_neighbors.txt'
     return
 
 def ReadData():
@@ -273,7 +273,7 @@ def FindTomekLinks(distMatrix):
     print('[Info] Get the tomek link index. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     return outIndex
 
-def GetCandidates(outIndex, negFeat):
+def GetCandidates(outIndex, negFeat, posFeat):
     '''
     Find all the tomek link candidates.
     Store these samples in the folder './candidates/'.
@@ -285,10 +285,15 @@ def GetCandidates(outIndex, negFeat):
     if os.path.exists(candiPath):
         shutil.rmtree(candiPath)
     os.mkdir(candiPath)
+    fp = open(tmpPath + '/nearest_neighbors.txt', 'w')
     # copy file
-    for i in outIndex:
+    for k, i in enumerate(outIndex):
         source = negFeat[i][0].replace('\\', '/')
         shutil.copy(source, candiPath)
+        posfile = posFeat[k][0].replace('\\', '/')
+        # print(k, i, posfile, source)
+        fp.write('(' + str(k) + ',' + str(i) + ',' + posfile + ',' + source + ')\n')
+    fp.close()
     print('[Info] Get all the candidates. [TIME: %s sec]' % (round((time.time() - start_time),2)))
     return 1
 
