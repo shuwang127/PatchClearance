@@ -30,3 +30,5 @@
         |-- README.md               # this file.
     Usage:
         python main.py
+
+To get `extract_features.py`, please refer to [XindaW/PatchFEX](https://github.com/XindaW/PatchFEX/blob/main/extract_features.py).
